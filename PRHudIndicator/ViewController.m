@@ -7,8 +7,11 @@
 //
 
 #import "ViewController.h"
+#import "PRHudIndicator.h"
 
 @interface ViewController ()
+
+@property (nonatomic,strong) PRHudIndicator *hud;
 
 @end
 
@@ -16,14 +19,32 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
+    
+    _hud = [PRHudIndicator sharedPRHudIndicator];
+    _hud.hudColor = [UIColor purpleColor];
+    _hud.hudText = @"正在加载...";
+    
+    [_hud animationFinishReturnBlock:^{
+        NSLog(@"加载完成");
+    }];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [_hud show];
+    });
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [_hud loadSucceedChangeAnimation];
+    });
 }
 
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [_hud show];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [_hud loadSucceedChangeAnimation];
+    });
 }
+
 
 
 @end

@@ -15,6 +15,8 @@
 		836D3CA0201379FF0069A95A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D3C9F201379FF0069A95A /* main.m */; };
 		836D3CAA201379FF0069A95A /* PRHudIndicatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D3CA9201379FF0069A95A /* PRHudIndicatorTests.m */; };
 		836D3CB5201379FF0069A95A /* PRHudIndicatorUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D3CB4201379FF0069A95A /* PRHudIndicatorUITests.m */; };
+		836D3CC420137A3F0069A95A /* PRHudIndicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D3CC320137A3F0069A95A /* PRHudIndicator.m */; };
+		836D3CC620138E2B0069A95A /* 010.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 836D3CC520138E2B0069A95A /* 010.jpg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +53,9 @@
 		836D3CB0201379FF0069A95A /* PRHudIndicatorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PRHudIndicatorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		836D3CB4201379FF0069A95A /* PRHudIndicatorUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PRHudIndicatorUITests.m; sourceTree = "<group>"; };
 		836D3CB6201379FF0069A95A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		836D3CC220137A3F0069A95A /* PRHudIndicator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PRHudIndicator.h; sourceTree = "<group>"; };
+		836D3CC320137A3F0069A95A /* PRHudIndicator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PRHudIndicator.m; sourceTree = "<group>"; };
+		836D3CC520138E2B0069A95A /* 010.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 010.jpg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +110,9 @@
 				836D3C91201379FE0069A95A /* AppDelegate.m */,
 				836D3C93201379FE0069A95A /* ViewController.h */,
 				836D3C94201379FF0069A95A /* ViewController.m */,
+				836D3CC220137A3F0069A95A /* PRHudIndicator.h */,
+				836D3CC320137A3F0069A95A /* PRHudIndicator.m */,
+				836D3CC520138E2B0069A95A /* 010.jpg */,
 				836D3C96201379FF0069A95A /* Main.storyboard */,
 				836D3C99201379FF0069A95A /* Assets.xcassets */,
 				836D3C9B201379FF0069A95A /* LaunchScreen.storyboard */,
@@ -241,6 +249,7 @@
 				836D3C9D201379FF0069A95A /* LaunchScreen.storyboard in Resources */,
 				836D3C9A201379FF0069A95A /* Assets.xcassets in Resources */,
 				836D3C98201379FF0069A95A /* Main.storyboard in Resources */,
+				836D3CC620138E2B0069A95A /* 010.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,6 +277,7 @@
 				836D3C95201379FF0069A95A /* ViewController.m in Sources */,
 				836D3CA0201379FF0069A95A /* main.m in Sources */,
 				836D3C92201379FE0069A95A /* AppDelegate.m in Sources */,
+				836D3CC420137A3F0069A95A /* PRHudIndicator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,6 +441,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7JT4ZMJ42;
 				INFOPLIST_FILE = PRHudIndicator/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = PR.PRHudIndicator;
@@ -444,6 +455,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7JT4ZMJ42;
 				INFOPLIST_FILE = PRHudIndicator/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = PR.PRHudIndicator;
