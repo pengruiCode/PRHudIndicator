@@ -20,7 +20,7 @@
 
 @interface PRHudIndicator () <CAAnimationDelegate>
 
-@property (strong, nonatomic) UILabel           *hudTextLb;
+@property (strong, nonatomic) UILabel           *hudTextLb;             //提示文字
 
 @property (strong, nonatomic) CAShapeLayer      *progressLayer;         //圆圈
 @property (strong, nonatomic) CABasicAnimation  *rotateAnimation;
@@ -29,7 +29,7 @@
 @property (strong, nonatomic) CAAnimationGroup  *animationGroup;
 
 @property (strong, nonatomic) CAShapeLayer      *succeedLayer;          //对号
-@property (strong, nonatomic) CABasicAnimation  *succeedAnim;          //对号
+@property (strong, nonatomic) CABasicAnimation  *succeedAnim;           //对号动画
 
 @end
 
@@ -111,6 +111,7 @@ static PRHudIndicator *instance;
     return _progressLayer;
 }
 
+//画圆
 - (CABasicAnimation *)rotateAnimation {
     if (!_rotateAnimation) {
         _rotateAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
@@ -163,16 +164,6 @@ static PRHudIndicator *instance;
     return _animationGroup;
 }
 
-#pragma mark --- 单线旋转样式，加载成功变对号指示
-- (void)loadSucceedChangeAnimation {
-    [self.progressLayer removeAllAnimations];
-    self.strokeAnimatinEnd.duration = 0.5;
-    self.strokeAnimatinEnd.repeatCount = 0;
-    [self.progressLayer addAnimation:self.strokeAnimatinEnd forKey:ANIMATIONN_KEY_LINE];
-    [self.progressLayer addSublayer:self.succeedLayer];
-    [self.succeedLayer addAnimation:self.succeedAnim forKey:ANIMATIONN_KEY_SUCCEED];
-}
-
 //对号
 - (CAShapeLayer *)succeedLayer {
     if (!_succeedLayer) {
@@ -194,7 +185,7 @@ static PRHudIndicator *instance;
     return _succeedLayer;
 }
 
-
+//对号动画
 - (CABasicAnimation *)succeedAnim {
     if (!_succeedAnim) {
         _succeedAnim = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
@@ -224,13 +215,14 @@ static PRHudIndicator *instance;
 
 
 
-#pragma mark --- 显示隐藏
+#pragma mark --- 显示转圈
 - (void)show {
     [[UIApplication sharedApplication].keyWindow addSubview:self];
+    [self.progressLayer removeAllAnimations];
+    [self.succeedLayer removeFromSuperlayer];
     
+    //如果是刚显示完对号
     if (self.strokeAnimatinEnd.duration == 0.5) {
-        [self.progressLayer removeAllAnimations];
-        [self.succeedLayer removeFromSuperlayer];
         self.strokeAnimatinEnd.duration = 2;
         self.strokeAnimatinEnd.repeatCount = HUGE;
     }
@@ -249,6 +241,20 @@ static PRHudIndicator *instance;
     } completion:nil];
 }
 
+
+#pragma mark --- 单线旋转样式，加载成功变对号指示
+- (void)loadSucceedChangeAnimation {
+    [self.progressLayer removeAllAnimations];
+    [self.succeedLayer removeAllAnimations];
+    self.strokeAnimatinEnd.duration = 0.5;
+    self.strokeAnimatinEnd.repeatCount = 0;
+    [self.progressLayer addAnimation:self.strokeAnimatinEnd forKey:ANIMATIONN_KEY_LINE];
+    [self.progressLayer addSublayer:self.succeedLayer];
+    [self.succeedLayer addAnimation:self.succeedAnim forKey:ANIMATIONN_KEY_SUCCEED];
+}
+
+
+#pragma mark --- 隐藏
 - (void)hide {
     //隐藏指示器,同时移除动画
     [UIView animateKeyframesWithDuration:0.6 delay:0 options:0 animations:^{
@@ -262,7 +268,6 @@ static PRHudIndicator *instance;
         [self.progressLayer removeAllAnimations];
         [self removeFromSuperview];
     }];
-    
 }
 
 
