@@ -21,15 +21,16 @@
 @interface PRHudIndicator () <CAAnimationDelegate>
 
 @property (strong, nonatomic) UILabel           *hudTextLb;             //提示文字
-
 @property (strong, nonatomic) CAShapeLayer      *progressLayer;         //圆圈
 @property (strong, nonatomic) CABasicAnimation  *rotateAnimation;
 @property (strong, nonatomic) CABasicAnimation  *strokeAnimatinStart;
 @property (strong, nonatomic) CABasicAnimation  *strokeAnimatinEnd;
 @property (strong, nonatomic) CAAnimationGroup  *animationGroup;
-
+@property (strong, nonatomic) UIVisualEffectView *effectView;           //毛玻璃背景
 @property (strong, nonatomic) CAShapeLayer      *succeedLayer;          //对号
+@property (strong, nonatomic) UIImageView       *runImageView;          //动图
 @property (strong, nonatomic) CABasicAnimation  *succeedAnim;           //对号动画
+@property (assign, nonatomic) NSInteger         rotateNumber;           //旋转计数，每次show都+1，每次hide -1
 
 @end
 
@@ -54,17 +55,21 @@ static PRHudIndicator *instance;
         self.layer.masksToBounds = YES;
         
         UIBlurEffect *effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
-        UIVisualEffectView *effectView = [[UIVisualEffectView alloc] initWithEffect:effect];
-        effectView.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
-        [self addSubview:effectView];
+        _effectView = [[UIVisualEffectView alloc] initWithEffect:effect];
+        _effectView.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
+        [self addSubview:_effectView];
         
-        _hudTextLb = [[UILabel alloc]initWithFrame:CGRectMake(0, 75, 100, 15)];
+        _hudTextLb = [[UILabel alloc]initWithFrame:CGRectMake(5, 75, self.frame.size.width - 10, 15)];
         _hudTextLb.textColor = [UIColor whiteColor];
         _hudTextLb.font = [UIFont systemFontOfSize:12];
         _hudTextLb.textAlignment = YES;
         [self addSubview:_hudTextLb];
         
-        [self.layer addSublayer:self.progressLayer];
+        if (!_hudType || _hudType == PRHudType_Round) {
+            [self.layer addSublayer:self.progressLayer];
+        }else{
+            [self addSubview:self.runImageView];
+        }
     }
     return self;
 }
@@ -74,13 +79,37 @@ static PRHudIndicator *instance;
     if (hudText.length > 0) {
         _hudText = hudText;
         _hudTextLb.text = hudText;
+        
+        //设置最大宽度
+        if ([self calculateRowWidth:hudText] + 10 >= SCREEN_WIDTH * 0.8) {
+            [self setFrame:CGRectMake(SCREEN_WIDTH * 0.1, (SCREEN_HEIGHT - 100)/2, SCREEN_WIDTH * 0.8, 100)];
+        }else if ([self calculateRowWidth:hudText] + 10 <= 100) {
+        
+        //设置自适应宽度
+        }else{
+            [self setFrame:CGRectMake((SCREEN_WIDTH - [self calculateRowWidth:hudText] + 10)/2, (SCREEN_HEIGHT - 100)/2, SCREEN_WIDTH - [self calculateRowWidth:hudText] + 10, 100)];
+        }
+        _hudTextLb.frame = CGRectMake(5, 75, self.frame.size.width - 10, 15);
+        _effectView.frame = self.bounds;
+        
         self.progressLayer.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2 - 10);
+        self.runImageView.frame = CGRectMake((self.frame.size.width-50)/2, (self.frame.size.height-50)/2, 50, 50);
     }else{
         _hudText = @"";
         _hudTextLb.text = @"";
         self.progressLayer.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
+        self.runImageView.frame = CGRectMake((self.frame.size.width-50)/2, 10, 50, 50);
     }
 }
+
+//计算提示文字所占宽度
+- (CGFloat)calculateRowWidth:(NSString *)string {
+    NSDictionary *dic = @{NSFontAttributeName:[UIFont systemFontOfSize:12]};  //指定字号
+    CGRect rect = [string boundingRectWithSize:CGSizeMake(0, 15)/*计算宽度时要确定高度*/ options:NSStringDrawingUsesLineFragmentOrigin |
+                   NSStringDrawingUsesFontLeading attributes:dic context:nil];
+    return rect.size.width;
+}
+
 
 //设置颜色
 - (void)setHudColor:(UIColor *)hudColor {
@@ -92,6 +121,25 @@ static PRHudIndicator *instance;
         self.progressLayer.strokeColor = [UIColor redColor].CGColor;
     }
 }
+
+
+
+- (UIImageView *)runImageView {
+    if (!_runImageView) {
+        _runImageView = [[UIImageView alloc]initWithFrame:CGRectMake((self.frame.size.width-50)/2, 10, 50, 50)];
+        NSMutableArray *images = [[NSMutableArray alloc]initWithCapacity:7];
+        for (int i=1; i<=5; i++)
+        {
+            [images addObject:[UIImage imageNamed:[NSString stringWithFormat:@"car%d.png",i]]];
+        }
+        _runImageView.animationImages = images;
+        _runImageView.animationDuration = 0.4 ;
+        _runImageView.animationRepeatCount = MAXFLOAT;
+//        [_runImageView startAnimating];
+    }
+    return _runImageView;
+}
+
 
 #pragma mark --- 单线旋转样式
 
@@ -217,57 +265,80 @@ static PRHudIndicator *instance;
 
 #pragma mark --- 显示转圈
 - (void)show {
-    [[UIApplication sharedApplication].keyWindow addSubview:self];
-    [self.progressLayer removeAllAnimations];
-    [self.succeedLayer removeFromSuperlayer];
-    
-    //如果是刚显示完对号
-    if (self.strokeAnimatinEnd.duration == 0.5) {
-        self.strokeAnimatinEnd.duration = 2;
-        self.strokeAnimatinEnd.repeatCount = HUGE;
+   ++ _rotateNumber;
+    if (!_isRotate) {
+        _isRotate = YES;
+        [[UIApplication sharedApplication].keyWindow addSubview:self];
+        [UIApplication sharedApplication].keyWindow.userInteractionEnabled = NO;
+        if (!_hudType || _hudType == PRHudType_Round) {
+            
+            [self.layer addSublayer:self.progressLayer];
+            [self.progressLayer removeAllAnimations];
+            [self.succeedLayer removeFromSuperlayer];
+            
+            //如果是刚显示完对号
+            if (self.strokeAnimatinEnd.duration == 0.5) {
+                self.strokeAnimatinEnd.duration = 2;
+                self.strokeAnimatinEnd.repeatCount = HUGE;
+            }
+            
+            [self.progressLayer addAnimation:self.animationGroup forKey:ANIMATIONN_KEY_ROTATE_GROUP];
+            [self.progressLayer addAnimation:self.rotateAnimation forKey:ANIMATIONN_KEY_ROTATE];
+        }else{
+            [self addSubview:self.runImageView];
+            [self.runImageView startAnimating];
+        }
+        
+        self.transform = CGAffineTransformMakeScale(0.1, 0.1);
+        [UIView animateKeyframesWithDuration:0.6 delay:0.0 options:0 animations:^{
+            [UIView addKeyframeWithRelativeStartTime:0 relativeDuration:0.5 animations:^{
+                self.transform = CGAffineTransformMakeScale(1.3, 1.3);
+            }];
+            [UIView addKeyframeWithRelativeStartTime:0.5 relativeDuration:0.5 animations:^{
+                self.transform = CGAffineTransformIdentity;
+            }];
+        } completion:nil];
     }
-    
-    [self.progressLayer addAnimation:self.animationGroup forKey:ANIMATIONN_KEY_ROTATE_GROUP];
-    [self.progressLayer addAnimation:self.rotateAnimation forKey:ANIMATIONN_KEY_ROTATE];
-    
-    self.transform = CGAffineTransformMakeScale(0.1, 0.1);
-    [UIView animateKeyframesWithDuration:0.6 delay:0.0 options:0 animations:^{
-        [UIView addKeyframeWithRelativeStartTime:0 relativeDuration:0.5 animations:^{
-            self.transform = CGAffineTransformMakeScale(1.3, 1.3);
-        }];
-        [UIView addKeyframeWithRelativeStartTime:0.5 relativeDuration:0.5 animations:^{
-            self.transform = CGAffineTransformIdentity;
-        }];
-    } completion:nil];
 }
 
 
 #pragma mark --- 单线旋转样式，加载成功变对号指示
 - (void)loadSucceedChangeAnimation {
-    [self.progressLayer removeAllAnimations];
-    [self.succeedLayer removeAllAnimations];
-    self.strokeAnimatinEnd.duration = 0.5;
-    self.strokeAnimatinEnd.repeatCount = 0;
-    [self.progressLayer addAnimation:self.strokeAnimatinEnd forKey:ANIMATIONN_KEY_LINE];
-    [self.progressLayer addSublayer:self.succeedLayer];
-    [self.succeedLayer addAnimation:self.succeedAnim forKey:ANIMATIONN_KEY_SUCCEED];
+    //当显示计数等于0则可以停止
+    -- _rotateNumber;
+    if (_isRotate && _rotateNumber == 0) {
+        [self.progressLayer removeAllAnimations];
+        [self.succeedLayer removeAllAnimations];
+        self.strokeAnimatinEnd.duration = 0.5;
+        self.strokeAnimatinEnd.repeatCount = 0;
+        [self.progressLayer addAnimation:self.strokeAnimatinEnd forKey:ANIMATIONN_KEY_LINE];
+        [self.progressLayer addSublayer:self.succeedLayer];
+        [self.succeedLayer addAnimation:self.succeedAnim forKey:ANIMATIONN_KEY_SUCCEED];
+    }
 }
 
 
 #pragma mark --- 隐藏
 - (void)hide {
-    //隐藏指示器,同时移除动画
-    [UIView animateKeyframesWithDuration:0.6 delay:0 options:0 animations:^{
-        [UIView addKeyframeWithRelativeStartTime:0 relativeDuration:0.5 animations:^{
-            self.transform = CGAffineTransformMakeScale(1.2, 1.2);
+    if (_rotateNumber > 0) {
+        -- _rotateNumber;
+    }
+    if (_isRotate && _rotateNumber == 0) {
+        [UIApplication sharedApplication].keyWindow.userInteractionEnabled = YES;
+        //隐藏指示器,同时移除动画
+        [UIView animateKeyframesWithDuration:0.6 delay:0 options:0 animations:^{
+            [UIView addKeyframeWithRelativeStartTime:0 relativeDuration:0.5 animations:^{
+                self.transform = CGAffineTransformMakeScale(1.2, 1.2);
+            }];
+            [UIView addKeyframeWithRelativeStartTime:0.5 relativeDuration:0.5 animations:^{
+                self.transform = CGAffineTransformMakeScale(0.1, 0.1);
+            }];
+        } completion:^(BOOL finished){
+            [self.progressLayer removeAllAnimations];
+            [self removeFromSuperview];
         }];
-        [UIView addKeyframeWithRelativeStartTime:0.5 relativeDuration:0.5 animations:^{
-            self.transform = CGAffineTransformMakeScale(0.1, 0.1);
-        }];
-    } completion:^(BOOL finished){
-        [self.progressLayer removeAllAnimations];
-        [self removeFromSuperview];
-    }];
+        _isRotate = NO;
+    }
 }
 
 

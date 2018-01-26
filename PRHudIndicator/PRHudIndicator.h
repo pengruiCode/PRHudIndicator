@@ -8,6 +8,14 @@
 
 #import <UIKit/UIKit.h>
 
+
+typedef NS_ENUM(NSUInteger , PRHudType) {
+    PRHudType_Round = 0,        //普通的小圆圈
+    PRHudType_Gif   = 1,        //动图
+} ;
+
+
+//加载完成回调
 typedef void(^animationFinishReturnBlock)(void);
 
 @interface PRHudIndicator : UIView
@@ -18,6 +26,10 @@ typedef void(^animationFinishReturnBlock)(void);
 @property (nonatomic,strong) UIColor *hudColor;
 //加载完成回调
 @property (nonatomic,strong) animationFinishReturnBlock finishBlock;
+//是否正在旋转
+@property (nonatomic,assign) BOOL isRotate;
+//hud类型
+@property (nonatomic,assign) PRHudType hudType;
 
 
 //单例创建
@@ -31,7 +43,7 @@ typedef void(^animationFinishReturnBlock)(void);
 //隐藏
 - (void)hide;
 
-//
+//显示加载完成对号
 - (void)loadSucceedChangeAnimation;
 
 
