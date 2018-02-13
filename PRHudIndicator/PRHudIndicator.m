@@ -7,6 +7,7 @@
 //
 
 #import "PRHudIndicator.h"
+#import "PRHudDownLoadView.h"
 
 #define SCREEN_WIDTH [[UIScreen mainScreen] bounds].size.width
 #define SCREEN_HEIGHT [[UIScreen mainScreen] bounds].size.height
@@ -21,6 +22,7 @@
 @interface PRHudIndicator () <CAAnimationDelegate>
 
 @property (strong, nonatomic) UILabel           *hudTextLb;             //提示文字
+@property (strong, nonatomic) PRHudDownLoadView *downLoadView;          //下载动画
 @property (strong, nonatomic) CAShapeLayer      *progressLayer;         //圆圈
 @property (strong, nonatomic) CABasicAnimation  *rotateAnimation;
 @property (strong, nonatomic) CABasicAnimation  *strokeAnimatinStart;
@@ -31,6 +33,7 @@
 @property (strong, nonatomic) UIImageView       *runImageView;          //动图
 @property (strong, nonatomic) CABasicAnimation  *succeedAnim;           //对号动画
 @property (assign, nonatomic) NSInteger         rotateNumber;           //旋转计数，每次show都+1，每次hide -1
+@property (assign, nonatomic) NSInteger         progressNumber;         //进度计数
 
 @end
 
@@ -63,44 +66,98 @@ static PRHudIndicator *instance;
         _hudTextLb.textColor = [UIColor whiteColor];
         _hudTextLb.font = [UIFont systemFontOfSize:12];
         _hudTextLb.textAlignment = YES;
-        [self addSubview:_hudTextLb];
         
-        if (!_hudType || _hudType == PRHudType_Round) {
-            [self.layer addSublayer:self.progressLayer];
-        }else{
-            [self addSubview:self.runImageView];
-        }
+        [self addSubview:_hudTextLb];
+        [self.layer addSublayer:self.progressLayer];
+
     }
     return self;
 }
 
 //设置指示文字
 - (void)setHudText:(NSString *)hudText {
-    if (hudText.length > 0) {
-        _hudText = hudText;
-        _hudTextLb.text = hudText;
-        
-        //设置最大宽度
-        if ([self calculateRowWidth:hudText] + 10 >= SCREEN_WIDTH * 0.8) {
-            [self setFrame:CGRectMake(SCREEN_WIDTH * 0.1, (SCREEN_HEIGHT - 100)/2, SCREEN_WIDTH * 0.8, 100)];
-        }else if ([self calculateRowWidth:hudText] + 10 <= 100) {
-        
-        //设置自适应宽度
+    if (_hudType != PRHudType_DownLoad) {
+        if (hudText.length > 0) {
+            _hudText = hudText;
+            _hudTextLb.text = hudText;
+            
+            //设置最大宽度
+            if ([self calculateRowWidth:hudText] + 10 >= SCREEN_WIDTH * 0.8) {
+                [self setFrame:CGRectMake(SCREEN_WIDTH * 0.1, (SCREEN_HEIGHT - 100)/2, SCREEN_WIDTH * 0.8, 100)];
+            }else if ([self calculateRowWidth:hudText] + 10 <= 100) {
+                
+                //设置自适应宽度
+            }else{
+                [self setFrame:CGRectMake((SCREEN_WIDTH - [self calculateRowWidth:hudText] + 10)/2, (SCREEN_HEIGHT - 100)/2, SCREEN_WIDTH - [self calculateRowWidth:hudText] + 10, 100)];
+            }
+            _hudTextLb.frame = CGRectMake(5, 75, self.frame.size.width - 10, 15);
+            _effectView.frame = self.bounds;
+            
+            self.progressLayer.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2 - 10);
+            self.runImageView.frame = CGRectMake((self.frame.size.width-50)/2, (self.frame.size.height-50)/2, 50, 50);
         }else{
-            [self setFrame:CGRectMake((SCREEN_WIDTH - [self calculateRowWidth:hudText] + 10)/2, (SCREEN_HEIGHT - 100)/2, SCREEN_WIDTH - [self calculateRowWidth:hudText] + 10, 100)];
+            _hudText = @"";
+            _hudTextLb.text = @"";
+            self.progressLayer.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
+            self.runImageView.frame = CGRectMake((self.frame.size.width-50)/2, 10, 50, 50);
         }
-        _hudTextLb.frame = CGRectMake(5, 75, self.frame.size.width - 10, 15);
-        _effectView.frame = self.bounds;
-        
-        self.progressLayer.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2 - 10);
-        self.runImageView.frame = CGRectMake((self.frame.size.width-50)/2, (self.frame.size.height-50)/2, 50, 50);
-    }else{
-        _hudText = @"";
-        _hudTextLb.text = @"";
-        self.progressLayer.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
-        self.runImageView.frame = CGRectMake((self.frame.size.width-50)/2, 10, 50, 50);
     }
 }
+
+- (void)setHudType:(PRHudType)hudType {
+    _hudType = hudType;
+    NSTimer *timer;
+    switch (hudType) {
+        case PRHudType_Round:
+            [self.runImageView removeFromSuperview];
+            [self.downLoadView removeFromSuperview];
+            [self addSubview:_hudTextLb];
+            [self.layer addSublayer:self.progressLayer];
+            break;
+        case PRHudType_Gif:
+            [self.downLoadView removeFromSuperview];
+            [self.progressLayer removeFromSuperlayer];
+            [self addSubview:_hudTextLb];
+            [self addSubview:self.runImageView];
+            break;
+        case PRHudType_DownLoad:
+            [self.runImageView removeFromSuperview];
+            [self.progressLayer removeFromSuperlayer];
+            [_hudTextLb removeFromSuperview];
+            [self addSubview:self.downLoadView];
+
+            _progressNumber = 0;
+            timer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(timerAction:) userInfo:nil repeats:YES];
+            [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
+            
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)timerAction:(NSTimer *)timer {
+    if (_progressNumber < 100) {
+        ++ _progressNumber;
+        [self.downLoadView setProgress:_progressNumber/100.00];
+    }else{
+        [timer invalidate];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self hide];
+        });
+        if (self.finishBlock) {
+            self.finishBlock();
+        }
+    }
+}
+
+- (PRHudDownLoadView *)downLoadView {
+    if (!_downLoadView) {
+        _downLoadView = [[PRHudDownLoadView alloc]initWithFrame:CGRectMake(0, 0, 100, 100)];
+    }
+    return _downLoadView;
+}
+
 
 //计算提示文字所占宽度
 - (CGFloat)calculateRowWidth:(NSString *)string {
@@ -135,7 +192,6 @@ static PRHudIndicator *instance;
         _runImageView.animationImages = images;
         _runImageView.animationDuration = 0.4 ;
         _runImageView.animationRepeatCount = MAXFLOAT;
-//        [_runImageView startAnimating];
     }
     return _runImageView;
 }
@@ -270,24 +326,24 @@ static PRHudIndicator *instance;
         _isRotate = YES;
         [[UIApplication sharedApplication].keyWindow addSubview:self];
         [UIApplication sharedApplication].keyWindow.userInteractionEnabled = NO;
-        if (!_hudType || _hudType == PRHudType_Round) {
-            
-            [self.layer addSublayer:self.progressLayer];
-            [self.progressLayer removeAllAnimations];
-            [self.succeedLayer removeFromSuperlayer];
-            
-            //如果是刚显示完对号
-            if (self.strokeAnimatinEnd.duration == 0.5) {
-                self.strokeAnimatinEnd.duration = 2;
-                self.strokeAnimatinEnd.repeatCount = HUGE;
-            }
-            
-            [self.progressLayer addAnimation:self.animationGroup forKey:ANIMATIONN_KEY_ROTATE_GROUP];
-            [self.progressLayer addAnimation:self.rotateAnimation forKey:ANIMATIONN_KEY_ROTATE];
-        }else{
-            [self addSubview:self.runImageView];
-            [self.runImageView startAnimating];
-        }
+//        if (!_hudType || _hudType == PRHudType_Round) {
+//            
+//            [self.layer addSublayer:self.progressLayer];
+//            [self.progressLayer removeAllAnimations];
+//            [self.succeedLayer removeFromSuperlayer];
+//            
+//            //如果是刚显示完对号
+//            if (self.strokeAnimatinEnd.duration == 0.5) {
+//                self.strokeAnimatinEnd.duration = 1.5;
+//                self.strokeAnimatinEnd.repeatCount = HUGE;
+//            }
+//            
+//            [self.progressLayer addAnimation:self.animationGroup forKey:ANIMATIONN_KEY_ROTATE_GROUP];
+//            [self.progressLayer addAnimation:self.rotateAnimation forKey:ANIMATIONN_KEY_ROTATE];
+//        }else{
+//            [self addSubview:self.runImageView];
+//            [self.runImageView startAnimating];
+//        }
         
         self.transform = CGAffineTransformMakeScale(0.1, 0.1);
         [UIView animateKeyframesWithDuration:0.6 delay:0.0 options:0 animations:^{
@@ -341,5 +397,22 @@ static PRHudIndicator *instance;
     }
 }
 
+//无论判断，全部移除
+- (void)hideAllAnimation {
+    [UIApplication sharedApplication].keyWindow.userInteractionEnabled = YES;
+    //隐藏指示器,同时移除动画
+    [UIView animateKeyframesWithDuration:0.6 delay:0 options:0 animations:^{
+        [UIView addKeyframeWithRelativeStartTime:0 relativeDuration:0.5 animations:^{
+            self.transform = CGAffineTransformMakeScale(1.2, 1.2);
+        }];
+        [UIView addKeyframeWithRelativeStartTime:0.5 relativeDuration:0.5 animations:^{
+            self.transform = CGAffineTransformMakeScale(0.1, 0.1);
+        }];
+    } completion:^(BOOL finished){
+        [self.progressLayer removeAllAnimations];
+        [self removeFromSuperview];
+    }];
+    _isRotate = NO;
+}
 
 @end

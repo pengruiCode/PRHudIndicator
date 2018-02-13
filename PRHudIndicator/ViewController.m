@@ -22,8 +22,9 @@
     
     _hud = [PRHudIndicator sharedPRHudIndicator];
     _hud.hudColor = [UIColor purpleColor];
-    _hud.hudText = @"正在加载...";
-    _hud.hudType = PRHudType_Gif;
+//    _hud.hudText = @"正在加载...as/fnsdlfbn'sdmlfg;sndfmS";
+    _hud.hudType = PRHudType_DownLoad;
+//    [_hud show];
     [_hud animationFinishReturnBlock:^{
         NSLog(@"加载完成");
     }];
@@ -32,15 +33,15 @@
         [_hud show];
     });
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-//        [_hud loadSucceedChangeAnimation];
-        [_hud hide];
-    });
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+////        [_hud loadSucceedChangeAnimation];
+//        [_hud hide];
+//    });
+
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     [_hud show];
-    NSLog(@"00000");
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 //        [_hud loadSucceedChangeAnimation];
         [_hud hide];

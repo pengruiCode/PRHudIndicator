@@ -10,8 +10,9 @@
 
 
 typedef NS_ENUM(NSUInteger , PRHudType) {
-    PRHudType_Round = 0,        //普通的小圆圈
-    PRHudType_Gif   = 1,        //动图
+    PRHudType_Round     = 0,        //普通的小圆圈
+    PRHudType_Gif       = 1,        //动图
+    PRHudType_DownLoad  = 2,        //下载
 } ;
 
 
@@ -46,6 +47,8 @@ typedef void(^animationFinishReturnBlock)(void);
 //显示加载完成对号
 - (void)loadSucceedChangeAnimation;
 
+//无论判断，全部移除
+- (void)hideAllAnimation;
 
 
 
