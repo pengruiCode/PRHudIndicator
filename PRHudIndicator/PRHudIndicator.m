@@ -81,7 +81,6 @@ static PRHudIndicator *instance;
 //            _hudText = hudText;
 //            _hudTextLb.text = hudText;
 //
-//
 //            if ([self calculateRowWidth:hudText] + 10 >= SCREEN_WIDTH * 0.8) {
 //                //设置最大宽度
 //                [self setFrame:CGRectMake(SCREEN_WIDTH * 0.1, (SCREEN_HEIGHT - 100)/2, SCREEN_WIDTH * 0.8, 100)];
